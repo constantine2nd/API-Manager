@@ -11,4 +11,4 @@ django-bootstrap-datepicker-plus
 django-mathfilters
 django-bootstrap
 django-csp
-django-cors-headers
+#django-cors-headers
