@@ -20,6 +20,8 @@ if os.getenv('CALLBACK_BASE_URL'):
 	CALLBACK_BASE_URL = os.getenv('CALLBACK_BASE_URL')
 if os.getenv('ALLOWED_HOSTS'):
 	ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
+if os.getenv('CSRF_TRUSTED_ORIGINS'):
+	CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS').split(',')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASES = {
     'default': {
