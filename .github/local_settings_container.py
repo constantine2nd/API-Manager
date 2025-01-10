@@ -22,6 +22,8 @@ if os.getenv('ALLOWED_HOSTS'):
 	ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
 if os.getenv('CSRF_TRUSTED_ORIGINS'):
 	CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS').split(',')
+if os.getenv('CORS_ORIGIN_WHITELIST'):
+	CORS_ORIGIN_WHITELIST = os.getenv('CORS_ORIGIN_WHITELIST').split(',')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASES = {
     'default': {
