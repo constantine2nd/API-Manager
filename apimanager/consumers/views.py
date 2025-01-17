@@ -69,7 +69,9 @@ class IndexView(LoginRequiredMixin, TemplateView):
         sorted_consumers=[]
         api = API(self.request.session.get('obp'))
         try:
-            urlpath = '/management/consumers'
+            limit = self.request.GET.get('limit', 50)
+            offset = self.request.GET.get('offset', 0)
+            urlpath = '/management/consumers?limit={}&offset={}'.format(limit, offset)
             consumers = api.get(urlpath)
             if 'code' in consumers and consumers['code'] >= 400:
                 messages.error(self.request, consumers['message'])
@@ -86,6 +88,8 @@ class IndexView(LoginRequiredMixin, TemplateView):
 
                 context.update({
                     'consumers': sorted_consumers,
+                    'limit': limit,
+                    'offset': offset,
                     'statistics': self.compile_statistics(consumers),
                 })
         except APIError as err:
