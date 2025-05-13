@@ -301,7 +301,6 @@ ALLOW_DIRECT_LOGIN = True
 GATEWAYLOGIN_HAS_CBS = False
 ALLOW_GATEWAY_LOGIN = True
 
-# Use bootstrap4 if you are using Bootstrap 3
 BOOTSTRAP4 = {
     'include_jquery': True,
 }
