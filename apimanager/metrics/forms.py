@@ -24,14 +24,14 @@ PLACEHOLDER2 = "00:00:00"
 class MetricsForm(forms.Form):
     from_date = forms.DateTimeField(
         label=_(FROM_DATE),
-        widget=DateTimePickerInput(format=API_DATE_FORMAT_WITH_DAY_DATE_TIME),
+        #widget=DateTimePickerInput(format=API_DATE_FORMAT_WITH_DAY_DATE_TIME),
         required=True,
         initial=(datetime.now() - timedelta(1)).strftime(API_DATE_FORMAT_WITH_DAY_DATE_TIME),
     )
 
     to_date = forms.DateTimeField(
         label=_(TO_DATE),
-        widget=DateTimePickerInput(format=API_DATE_FORMAT_WITH_DAY_DATE_TIME),
+        #widget=DateTimePickerInput(format=API_DATE_FORMAT_WITH_DAY_DATE_TIME),
         required=True,
         initial=(datetime.now() - timedelta()).strftime(API_DATE_FORMAT_WITH_DAY_DATE_TIME),
     )
@@ -157,7 +157,7 @@ class ConnectorMetricsForm(MetricsForm):
     # override from_date until API returns values without given date
     from_date = forms.DateTimeField(
         label=_(FROM_DATE),
-        widget=DateTimePickerInput(format=API_DATE_FORMAT_WITH_DAY_DATE_TIME),
+        #widget=DateTimePickerInput(format=API_DATE_FORMAT_WITH_DAY_DATE_TIME),
         required=True,
         initial=(datetime.now() - timedelta(6)).strftime(API_DATE_FORMAT_WITH_DAY_DATE_TIME),
     )
@@ -193,13 +193,13 @@ class ConnectorMetricsForm(MetricsForm):
 class CustomSummaryForm(forms.Form):
     to_date = forms.DateTimeField(
         label=_(TO_DATE),
-        widget=DateTimePickerInput(format=API_DATE_FORMAT_WITH_DAY_DATE_TIME),
+        #widget=DateTimePickerInput(format=API_DATE_FORMAT_WITH_DAY_DATE_TIME),
         required=True,
         initial=(datetime.now()).strftime(API_DATE_FORMAT_WITH_DAY_DATE_TIME),
     )
     from_date_custom = forms.DateTimeField(
         label=_(FROM_DATE),
-        widget=DateTimePickerInput(format=API_DATE_FORMAT_WITH_DAY_DATE_TIME),
+        #widget=DateTimePickerInput(format=API_DATE_FORMAT_WITH_DAY_DATE_TIME),
         required=True,
         initial=(datetime.now() - timedelta(6)).strftime(API_DATE_FORMAT_WITH_DAY_DATE_TIME),
     )
