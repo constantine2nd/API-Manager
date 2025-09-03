@@ -1,0 +1,41 @@
+FROM python:3.10
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Set work directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        postgresql-client \
+        python3-tk \
+        tk \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt /app/
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt \
+    && pip install dj-database-url
+
+# Copy project
+COPY . /app/
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/static /app/db
+
+# Copy development local settings and entrypoint script to /usr/local/bin
+COPY development/local_settings_dev.py /usr/local/bin/local_settings_dev.py
+COPY development/docker-entrypoint-dev.sh /usr/local/bin/docker-entrypoint-dev.sh
+
+# Set proper permissions
+RUN chmod +x /app/apimanager/manage.py /usr/local/bin/docker-entrypoint-dev.sh
+
+# Expose port
+EXPOSE 8000
+
+# Use entrypoint script
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint-dev.sh"]
