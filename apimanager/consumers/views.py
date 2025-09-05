@@ -4,12 +4,15 @@ Views of consumers app
 """
 
 from datetime import datetime
+import datetime as dt_module
+import json
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.views.generic import TemplateView, RedirectView, FormView
+from django.http import JsonResponse
 
 from obp.api import API, APIError
 from base.filters import BaseFilter, FilterTime
@@ -110,6 +113,44 @@ class DetailView(LoginRequiredMixin, FormView):
     def get_form(self, *args, **kwargs):
         form = super(DetailView, self).get_form(*args, **kwargs)
         form.fields['consumer_id'].initial = self.kwargs['consumer_id']
+
+        # Get call limits data to populate form
+        api = API(self.request.session.get('obp'))
+        try:
+            call_limits_urlpath = '/management/consumers/{}/consumer/call-limits'.format(self.kwargs['consumer_id'])
+            call_limits = api.get(call_limits_urlpath)
+
+            if not ('code' in call_limits and call_limits['code'] >= 400):
+                # Populate form with existing rate limiting data
+                if 'from_date' in call_limits and call_limits['from_date']:
+                    try:
+                        from_date_str = call_limits['from_date'].replace('Z', '')
+                        # Parse and ensure no timezone info for form field
+                        dt = datetime.fromisoformat(from_date_str)
+                        if dt.tzinfo:
+                            dt = dt.replace(tzinfo=None)
+                        form.fields['from_date'].initial = dt
+                    except:
+                        pass
+                if 'to_date' in call_limits and call_limits['to_date']:
+                    try:
+                        to_date_str = call_limits['to_date'].replace('Z', '')
+                        # Parse and ensure no timezone info for form field
+                        dt = datetime.fromisoformat(to_date_str)
+                        if dt.tzinfo:
+                            dt = dt.replace(tzinfo=None)
+                        form.fields['to_date'].initial = dt
+                    except:
+                        pass
+                form.fields['per_second_call_limit'].initial = call_limits.get('per_second_call_limit', '-1')
+                form.fields['per_minute_call_limit'].initial = call_limits.get('per_minute_call_limit', '-1')
+                form.fields['per_hour_call_limit'].initial = call_limits.get('per_hour_call_limit', '-1')
+                form.fields['per_day_call_limit'].initial = call_limits.get('per_day_call_limit', '-1')
+                form.fields['per_week_call_limit'].initial = call_limits.get('per_week_call_limit', '-1')
+                form.fields['per_month_call_limit'].initial = call_limits.get('per_month_call_limit', '-1')
+        except:
+            pass
+
         return form
 
     def form_valid(self, form):
@@ -121,15 +162,33 @@ class DetailView(LoginRequiredMixin, FormView):
             if api_consumers_form.is_valid():
                 data = api_consumers_form.cleaned_data
 
-            urlpath = '/management/consumers/{}/consumer/calls_limit'.format(data['consumer_id'])
+            urlpath = '/management/consumers/{}/consumer/call-limits'.format(data['consumer_id'])
+
+            # Helper function to format datetime to UTC
+            def format_datetime_utc(dt):
+                if not dt:
+                    return "2024-01-01T00:00:00Z"
+                # Convert to UTC and format as required by API
+                if dt.tzinfo:
+                    dt = dt.astimezone(dt_module.timezone.utc).replace(tzinfo=None)
+                return dt.strftime('%Y-%m-%dT%H:%M:%SZ')
 
             payload = {
-                'per_minute_call_limit': data['per_minute_call_limit'],
-                'per_hour_call_limit': data['per_hour_call_limit'],
-                'per_day_call_limit': data['per_day_call_limit'],
-                'per_week_call_limit': data['per_week_call_limit'],
-                'per_month_call_limit': data['per_month_call_limit']
+                'from_date': format_datetime_utc(data['from_date']),
+                'to_date': format_datetime_utc(data['to_date']),
+                'per_second_call_limit': str(data['per_second_call_limit']) if data['per_second_call_limit'] is not None else "-1",
+                'per_minute_call_limit': str(data['per_minute_call_limit']) if data['per_minute_call_limit'] is not None else "-1",
+                'per_hour_call_limit': str(data['per_hour_call_limit']) if data['per_hour_call_limit'] is not None else "-1",
+                'per_day_call_limit': str(data['per_day_call_limit']) if data['per_day_call_limit'] is not None else "-1",
+                'per_week_call_limit': str(data['per_week_call_limit']) if data['per_week_call_limit'] is not None else "-1",
+                'per_month_call_limit': str(data['per_month_call_limit']) if data['per_month_call_limit'] is not None else "-1"
             }
+
+            response = self.api.put(urlpath, payload)
+            if 'code' in response and response['code'] >= 400:
+                messages.error(self.request, response['message'])
+                return super(DetailView, self).form_invalid(api_consumers_form)
+
         except APIError as err:
             messages.error(self.request, err)
             return super(DetailView, self).form_invalid(api_consumers_form)
@@ -137,31 +196,72 @@ class DetailView(LoginRequiredMixin, FormView):
             messages.error(self.request, "{}".format(err))
             return super(DetailView, self).form_invalid(api_consumers_form)
 
-        msg = 'calls limit of consumer {} has been updated successfully.'.format(
+        msg = 'Rate limits for consumer {} have been updated successfully.'.format(
             data['consumer_id'])
         messages.success(self.request, msg)
         self.success_url = self.request.path
         return super(DetailView, self).form_valid(api_consumers_form)
 
+    def get(self, request, *args, **kwargs):
+        # Check if this is an AJAX request for usage data
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return self.get_usage_data_ajax()
+        return super(DetailView, self).get(request, *args, **kwargs)
+
+    def get_usage_data_ajax(self):
+        """Return usage data as JSON for AJAX refresh"""
+        api = API(self.request.session.get('obp'))
+        try:
+            call_limits_urlpath = '/management/consumers/{}/consumer/call-limits'.format(self.kwargs['consumer_id'])
+            call_limits = api.get(call_limits_urlpath)
+
+            if 'code' in call_limits and call_limits['code'] >= 400:
+                return JsonResponse({'error': call_limits['message']}, status=400)
+
+            return JsonResponse(call_limits)
+        except APIError as err:
+            return JsonResponse({'error': str(err)}, status=500)
+        except Exception as err:
+            return JsonResponse({'error': str(err)}, status=500)
+
     def get_context_data(self, **kwargs):
         context = super(DetailView, self).get_context_data(**kwargs)
         api = API(self.request.session.get('obp'))
+        consumer = {}
+        call_limits = {}
+
         try:
             urlpath = '/management/consumers/{}'.format(self.kwargs['consumer_id'])
             consumer = api.get(urlpath)
-            consumer['created'] = datetime.strptime(
-                consumer['created'], settings.API_DATE_FORMAT_WITH_SECONDS )
-
-            call_limits_urlpath = '/management/consumers/{}/consumer/call-limits'.format(self.kwargs['consumer_id'])
-            consumer_call_limtis = api.get(call_limits_urlpath)
-            if 'code' in consumer_call_limtis and consumer_call_limtis['code'] >= 400:
-                messages.error(self.request, "{}".format(consumer_call_limtis['message']))
+            if 'code' in consumer and consumer['code'] >= 400:
+                messages.error(self.request, consumer['message'])
+                consumer = {}
             else:
-                consumer['per_minute_call_limit'] = consumer_call_limtis['per_minute_call_limit']
-                consumer['per_hour_call_limit'] = consumer_call_limtis['per_hour_call_limit']
-                consumer['per_day_call_limit'] = consumer_call_limtis['per_day_call_limit']
-                consumer['per_week_call_limit'] = consumer_call_limtis['per_week_call_limit']
-                consumer['per_month_call_limit'] = consumer_call_limtis['per_month_call_limit']
+                consumer['created'] = datetime.strptime(
+                    consumer['created'], settings.API_DATE_FORMAT_WITH_SECONDS )
+
+            # Get call limits using the correct API endpoint
+            call_limits_urlpath = '/management/consumers/{}/consumer/call-limits'.format(self.kwargs['consumer_id'])
+            call_limits = api.get(call_limits_urlpath)
+
+            if 'code' in call_limits and call_limits['code'] >= 400:
+                messages.error(self.request, "{}".format(call_limits['message']))
+                call_limits = {}
+            else:
+                # Merge call limits data into consumer object
+                consumer.update({
+                    'from_date': call_limits.get('from_date', ''),
+                    'to_date': call_limits.get('to_date', ''),
+                    'per_second_call_limit': call_limits.get('per_second_call_limit', '-1'),
+                    'per_minute_call_limit': call_limits.get('per_minute_call_limit', '-1'),
+                    'per_hour_call_limit': call_limits.get('per_hour_call_limit', '-1'),
+                    'per_day_call_limit': call_limits.get('per_day_call_limit', '-1'),
+                    'per_week_call_limit': call_limits.get('per_week_call_limit', '-1'),
+                    'per_month_call_limit': call_limits.get('per_month_call_limit', '-1'),
+                    'current_state': call_limits.get('current_state', {}),
+                    'created_at': call_limits.get('created_at', ''),
+                    'updated_at': call_limits.get('updated_at', ''),
+                })
 
         except APIError as err:
             messages.error(self.request, err)
@@ -169,9 +269,29 @@ class DetailView(LoginRequiredMixin, FormView):
             messages.error(self.request, "{}".format(err))
         finally:
             context.update({
-                'consumer': consumer
+                'consumer': consumer,
+                'call_limits': call_limits
             })
         return context
+
+
+class UsageDataAjaxView(LoginRequiredMixin, TemplateView):
+    """AJAX view to return usage data for real-time updates"""
+
+    def get(self, request, *args, **kwargs):
+        api = API(self.request.session.get('obp'))
+        try:
+            call_limits_urlpath = '/management/consumers/{}/consumer/call-limits'.format(self.kwargs['consumer_id'])
+            call_limits = api.get(call_limits_urlpath)
+
+            if 'code' in call_limits and call_limits['code'] >= 400:
+                return JsonResponse({'error': call_limits['message']}, status=400)
+
+            return JsonResponse(call_limits)
+        except APIError as err:
+            return JsonResponse({'error': str(err)}, status=500)
+        except Exception as err:
+            return JsonResponse({'error': str(err)}, status=500)
 
 
 class EnableDisableView(LoginRequiredMixin, RedirectView):

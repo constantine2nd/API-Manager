@@ -12,7 +12,7 @@
     <div class="row">
         <div class="col-xs-12">
 
-            <h2>{% trans "Params" %}</h2>
+            <h2>{% trans "Rate Limiting Configuration" %}</h2>
             <form action="" method="post">
                 {% csrf_token %}
                 {{ form.consumer_id }}
@@ -23,35 +23,59 @@
                 {% endif %}
 
                 <div class="row">
-                    <div class="col-xs-2 col-sm-2">
+                    <div class="col-xs-12 col-sm-6">
+                        {% if form.from_date.errors %}<div class="alert alert-danger">{{ form.from_date.errors }}</div>{% endif %}
+                        <div class="form-group">
+                            {{ form.from_date.label_tag }}
+                            {{ form.from_date }}
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-sm-6">
+                        {% if form.to_date.errors %}<div class="alert alert-danger">{{ form.to_date.errors }}</div>{% endif %}
+                        <div class="form-group">
+                            {{ form.to_date.label_tag }}
+                            {{ form.to_date }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-6 col-sm-4 col-md-2">
+                        {% if form.per_second_call_limit.errors %}<div class="alert alert-danger">{{ form.per_second_call_limit.errors }}</div>{% endif %}
+                        <div class="form-group">
+                            {{ form.per_second_call_limit.label_tag }}
+                            {{ form.per_second_call_limit }}
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-4 col-md-2">
                         {% if form.per_minute_call_limit.errors %}<div class="alert alert-danger">{{ form.per_minute_call_limit.errors }}</div>{% endif %}
                         <div class="form-group">
                             {{ form.per_minute_call_limit.label_tag }}
                             {{ form.per_minute_call_limit }}
                         </div>
                     </div>
-                    <div class="col-xs-2 col-sm-2">
+                    <div class="col-xs-6 col-sm-4 col-md-2">
                         {% if form.per_hour_call_limit.errors %}<div class="alert alert-danger">{{ form.per_hour_call_limit.errors }}</div>{% endif %}
                         <div class="form-group">
                             {{ form.per_hour_call_limit.label_tag }}
                             {{ form.per_hour_call_limit }}
                         </div>
                     </div>
-                    <div class="col-xs-2 col-sm-2">
+                    <div class="col-xs-6 col-sm-4 col-md-2">
                         {% if form.per_day_call_limit.errors %}<div class="alert alert-danger">{{ form.per_day_call_limit.errors }}</div>{% endif %}
                         <div class="form-group">
                             {{ form.per_day_call_limit.label_tag }}
                             {{ form.per_day_call_limit }}
                         </div>
                     </div>
-                    <div class="col-xs-2 col-sm-2">
+                    <div class="col-xs-6 col-sm-4 col-md-2">
                         {% if form.per_week_call_limit.errors %}<div class="alert alert-danger">{{ form.per_week_call_limit.errors }}</div>{% endif %}
                         <div class="form-group">
                             {{ form.per_week_call_limit.label_tag }}
                             {{ form.per_week_call_limit }}
                         </div>
                     </div>
-                    <div class="col-xs-2 col-sm-2">
+                    <div class="col-xs-6 col-sm-4 col-md-2">
                         {% if form.per_month_call_limit.errors %}<div class="alert alert-danger">{{ form.per_month_call_limit.errors }}</div>{% endif %}
                         <div class="form-group">
                             {{ form.per_month_call_limit.label_tag }}
@@ -60,11 +84,84 @@
                     </div>
                 </div>
 
-
-                <button type="submit" class="btn btn-primary">{% trans "Update Consumer" %}</button>
+                <button type="submit" class="btn btn-primary">{% trans "Update Rate Limits" %}</button>
             </form>
+
+            {% if consumer.created_at %}
+            <div class="row" style="margin-top: 20px;">
+                <div class="col-xs-6 col-sm-6">
+                    <div class="form-group">
+                        <label>{% trans "Rate Limits Created At" %}</label>
+                        <input type="text" class="form-control" value="{{ consumer.created_at }}" readonly />
+                    </div>
+                </div>
+                <div class="col-xs-6 col-sm-6">
+                    <div class="form-group">
+                        <label>{% trans "Rate Limits Updated At" %}</label>
+                        <input type="text" class="form-control" value="{{ consumer.updated_at }}" readonly />
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
+
+    {% if consumer.current_state %}
+    <div class="row">
+        <div class="col-xs-12">
+            <h2>{% trans "Current Usage" %}
+                <button type="button" id="refreshUsageBtn" class="btn btn-sm btn-info pull-right" onclick="refreshUsageStats()">
+                    <span class="glyphicon glyphicon-refresh"></span> {% trans "Refresh (10s)" %}
+                </button>
+            </h2>
+            <div class="panel panel-info" id="usageStatsPanel">
+                <div class="panel-body" id="usageStatsContent">
+                    {% if consumer.current_state.per_hour %}
+                    <div class="row" id="usageStatsRow">
+                        {% if consumer.current_state.per_second %}
+                        <div class="col-xs-6 col-sm-2" data-period="per_second">
+                            <strong>{% trans "Per Second" %}</strong><br>
+                            <span class="text-info usage-calls">{{ consumer.current_state.per_second.calls_made }} calls made</span><br>
+                            <small class="text-muted usage-reset">Resets in {{ consumer.current_state.per_second.reset_in_seconds }} seconds</small>
+                        </div>
+                        {% endif %}
+                        {% if consumer.current_state.per_minute %}
+                        <div class="col-xs-6 col-sm-2" data-period="per_minute">
+                            <strong>{% trans "Per Minute" %}</strong><br>
+                            <span class="text-info usage-calls">{{ consumer.current_state.per_minute.calls_made }} calls made</span><br>
+                            <small class="text-muted usage-reset">Resets in {{ consumer.current_state.per_minute.reset_in_seconds }} seconds</small>
+                        </div>
+                        {% endif %}
+                        <div class="col-xs-6 col-sm-2" data-period="per_hour">
+                            <strong>{% trans "Per Hour" %}</strong><br>
+                            <span class="text-info usage-calls">{{ consumer.current_state.per_hour.calls_made }} calls made</span><br>
+                            <small class="text-muted usage-reset">Resets in {{ consumer.current_state.per_hour.reset_in_seconds }} seconds</small>
+                        </div>
+                        <div class="col-xs-6 col-sm-2" data-period="per_day">
+                            <strong>{% trans "Per Day" %}</strong><br>
+                            <span class="text-info usage-calls">{{ consumer.current_state.per_day.calls_made }} calls made</span><br>
+                            <small class="text-muted usage-reset">Resets in {{ consumer.current_state.per_day.reset_in_seconds }} seconds</small>
+                        </div>
+                        <div class="col-xs-6 col-sm-2" data-period="per_week">
+                            <strong>{% trans "Per Week" %}</strong><br>
+                            <span class="text-info usage-calls">{{ consumer.current_state.per_week.calls_made }} calls made</span><br>
+                            <small class="text-muted usage-reset">Resets in {{ consumer.current_state.per_week.reset_in_seconds }} seconds</small>
+                        </div>
+                        <div class="col-xs-6 col-sm-2" data-period="per_month">
+                            <strong>{% trans "Per Month" %}</strong><br>
+                            <span class="text-info usage-calls">{{ consumer.current_state.per_month.calls_made }} calls made</span><br>
+                            <small class="text-muted usage-reset">Resets in {{ consumer.current_state.per_month.reset_in_seconds }} seconds</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div id="refreshProgress" class="progress" style="display: none; margin-top: 15px;">
+                        <div class="progress-bar progress-bar-info progress-bar-striped active" id="progressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 	<div class="row">
 		<div class="col-xs-12">
 			<div id="consumers-detail-consumer_id">
@@ -122,51 +219,16 @@
 		</div>
 	</div>
 
-	<div class="row">
-		<div class="col-xs-6 col-sm-6">
-			<div id="consumers-detail-redirect_url">
-				<strong>{% trans "Redirect URL" %}</strong><br />
-				<span>{{ consumer.redirect_url }}</span>
-			</div>
-		</div>
-        <div class="col-xs-6 col-sm-6">
-            <div id="consumers-per_minute_call_limit ">
-                <strong>{% trans "Per minute call limit" %}</strong><br />
-                <span>{{ consumer.per_minute_call_limit }}</span>
-            </div>
-        </div>
-	</div>
-
-    <div class="row">
-        <div class="col-xs-6 col-sm-6">
-            <div id="consumers-per_hour_call_limit ">
-                <strong>{% trans "Per hour call limit" %} </strong><br />
-                <span>{{ consumer.per_hour_call_limit }}</span>
-            </div>
-        </div>
-        <div class="col-xs-6 col-sm-6">
-            <div id="consumers-per_day_call_limit">
-                <strong>{% trans "Per day call limit" %}</strong><br />
-                <span>{{ consumer.per_day_call_limit }}</span>
-            </div>
-        </div>
-    </div>
+	    <div class="row">
+	        <div class="col-xs-12">
+	            <div id="consumers-detail-redirect_url">
+	                <strong>{% trans "Redirect URL" %}</strong><br />
+	                <span>{{ consumer.redirect_url }}</span>
+	            </div>
+	        </div>
+	    </div>
 
 
-    <div class="row">
-        <div class="col-xs-6 col-sm-6">
-            <div id="consumers-per_week_call_limit">
-                <strong>{% trans "Per week call limit" %}</strong><br />
-                <span>{{ consumer.per_week_call_limit }}</span>
-            </div>
-        </div>
-        <div class="col-xs-6 col-sm-6">
-            <div id="consumers-per_month_call_limit">
-                <strong>{% trans "Per month call limit" %}</strong><br />
-                <span>{{ consumer.per_month_call_limit }}</span>
-            </div>
-        </div>
-    </div>
 
 
 	<div class="row">
@@ -204,11 +266,208 @@
 {% endblock %}
 
 {% block extrajs %}
-{% comment %}
 	<script type="text/javascript" src="{% static 'consumers/js/consumers.js' %}"></script>
 	<script type="text/javascript">
+		// Add data attributes for existing datetime values
+		$(document).ready(function() {
+			{% if consumer.from_date %}
+			$('body').attr('data-from-date', '{{ consumer.from_date }}');
+			{% endif %}
+			{% if consumer.to_date %}
+			$('body').attr('data-to-date', '{{ consumer.to_date }}');
+			{% endif %}
+		});
+
+		// Global variables for refresh functionality
+		let refreshInterval = null;
+		let refreshCount = 0;
+		const MAX_REFRESH_COUNT = 10;
+
+		// Function to refresh usage statistics
+		function refreshUsageStats() {
+			const button = document.getElementById('refreshUsageBtn');
+			const progressDiv = document.getElementById('refreshProgress');
+			const progressBar = document.getElementById('progressBar');
+
+			// Disable button and show progress
+			button.disabled = true;
+			button.innerHTML = '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span> Refreshing...';
+			progressDiv.style.display = 'block';
+
+			// Reset counters
+			refreshCount = 0;
+
+			// Start refresh cycle
+			refreshInterval = setInterval(fetchUsageData, 1000);
+			fetchUsageData(); // Initial fetch
+		}
+
+		// Function to fetch usage data via AJAX
+		function fetchUsageData() {
+			const consumerId = '{{ consumer.consumer_id }}';
+			const panel = document.getElementById('usageStatsPanel');
+
+			// Add refreshing effect to panel
+			panel.classList.add('panel-refreshing');
+
+			$.ajax({
+				url: '{% url "consumers-usage-data" consumer.consumer_id %}',
+				method: 'GET',
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest',
+					'Accept': 'application/json'
+				},
+				timeout: 5000, // 5 second timeout
+				success: function(data) {
+					updateUsageDisplay(data);
+					refreshCount++;
+
+					// Update progress bar
+					const progress = (refreshCount / MAX_REFRESH_COUNT) * 100;
+					const progressBar = document.getElementById('progressBar');
+					progressBar.style.width = progress + '%';
+					progressBar.textContent = refreshCount + '/' + MAX_REFRESH_COUNT;
+
+					// Stop after 10 seconds
+					if (refreshCount >= MAX_REFRESH_COUNT) {
+						clearInterval(refreshInterval);
+						resetRefreshButton();
+						panel.classList.remove('panel-refreshing');
+					}
+				},
+				error: function(xhr, status, error) {
+					console.error('Error fetching usage data:', error);
+					showRefreshError(error);
+
+					refreshCount++;
+					const progress = (refreshCount / MAX_REFRESH_COUNT) * 100;
+					document.getElementById('progressBar').style.width = progress + '%';
+
+					if (refreshCount >= MAX_REFRESH_COUNT) {
+						clearInterval(refreshInterval);
+						resetRefreshButton();
+						panel.classList.remove('panel-refreshing');
+					}
+				}
+			});
+		}
+
+		// Function to show refresh error
+		function showRefreshError(error) {
+			const errorDiv = document.getElementById('refreshError');
+			if (!errorDiv) {
+				const newErrorDiv = document.createElement('div');
+				newErrorDiv.id = 'refreshError';
+				newErrorDiv.className = 'alert alert-warning alert-dismissible';
+				newErrorDiv.style.marginTop = '10px';
+				newErrorDiv.innerHTML = '<button type="button" class="close" data-dismiss="alert">&times;</button><strong>Warning:</strong> Failed to fetch latest data. Continuing...';
+				document.getElementById('usageStatsContent').appendChild(newErrorDiv);
+
+				// Auto-hide after 3 seconds
+				setTimeout(function() {
+					if (newErrorDiv.parentNode) {
+						newErrorDiv.parentNode.removeChild(newErrorDiv);
+					}
+				}, 3000);
+			}
+		}
+
+		// Function to update usage display with new data
+		function updateUsageDisplay(data) {
+			if (data && data.current_state) {
+				const currentState = data.current_state;
+				const periods = ['per_second', 'per_minute', 'per_hour', 'per_day', 'per_week', 'per_month'];
+
+				periods.forEach(function(period) {
+					const periodData = currentState[period];
+					if (periodData) {
+						const periodDiv = document.querySelector('[data-period="' + period + '"]');
+						if (periodDiv) {
+							const callsSpan = periodDiv.querySelector('.usage-calls');
+							const resetSpan = periodDiv.querySelector('.usage-reset');
+
+							if (callsSpan) {
+								const oldCalls = callsSpan.textContent.match(/\d+/);
+								const newCalls = periodData.calls_made;
+
+								// Check if calls increased
+								const callsIncreased = oldCalls && parseInt(oldCalls[0]) < newCalls;
+
+								callsSpan.textContent = newCalls + ' calls made';
+
+								// Add visual feedback
+								callsSpan.classList.add('updating');
+								if (callsIncreased) {
+									periodDiv.classList.add('data-updated');
+									// Flash effect for increased calls
+									callsSpan.style.backgroundColor = '#28a745';
+									callsSpan.style.color = 'white';
+									setTimeout(function() {
+										callsSpan.style.backgroundColor = '#d4edda';
+										callsSpan.style.color = '';
+									}, 200);
+								}
+
+								setTimeout(function() {
+									callsSpan.classList.remove('updating');
+									periodDiv.classList.remove('data-updated');
+									callsSpan.style.backgroundColor = '';
+								}, 1000);
+							}
+
+							if (resetSpan) {
+								resetSpan.textContent = 'Resets in ' + periodData.reset_in_seconds + ' seconds';
+								// Add subtle animation to reset timer
+								resetSpan.style.opacity = '0.7';
+								setTimeout(function() {
+									resetSpan.style.opacity = '1';
+								}, 300);
+							}
+						}
+					}
+				});
+
+				// Show last updated time
+				updateLastRefreshTime();
+			}
+		}
+
+		// Function to update last refresh time
+		function updateLastRefreshTime() {
+			let timeDiv = document.getElementById('lastRefreshTime');
+			if (!timeDiv) {
+				timeDiv = document.createElement('small');
+				timeDiv.id = 'lastRefreshTime';
+				timeDiv.className = 'text-muted';
+				timeDiv.style.display = 'block';
+				timeDiv.style.textAlign = 'center';
+				timeDiv.style.marginTop = '10px';
+				document.getElementById('usageStatsContent').appendChild(timeDiv);
+			}
+
+			const now = new Date();
+			timeDiv.textContent = 'Last updated: ' + now.toLocaleTimeString();
+		}
+
+		// Function to reset refresh button
+		function resetRefreshButton() {
+			const button = document.getElementById('refreshUsageBtn');
+			const progressDiv = document.getElementById('refreshProgress');
+			const panel = document.getElementById('usageStatsPanel');
+
+			button.disabled = false;
+			button.innerHTML = '<span class="glyphicon glyphicon-refresh"></span> {% trans "Refresh (10s)" %}';
+			progressDiv.style.display = 'none';
+			document.getElementById('progressBar').style.width = '0%';
+			document.getElementById('progressBar').textContent = '';
+
+			// Remove any error messages
+			const errorDiv = document.getElementById('refreshError');
+			if (errorDiv && errorDiv.parentNode) {
+				errorDiv.parentNode.removeChild(errorDiv);
+			}
+		}
 	</script>
-{% endcomment %}
 {% endblock extrajs %}
 
 

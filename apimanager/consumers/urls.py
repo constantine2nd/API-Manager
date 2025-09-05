@@ -5,7 +5,7 @@ URLs for consumers app
 
 from django.urls import re_path
 
-from .views import IndexView, DetailView, EnableView, DisableView
+from .views import IndexView, DetailView, EnableView, DisableView, UsageDataAjaxView
 
 urlpatterns = [
     re_path(r'^$',
@@ -20,4 +20,7 @@ urlpatterns = [
     re_path(r'^(?P<consumer_id>[0-9a-z\-]+)/disable$',
         DisableView.as_view(),
         name='consumers-disable'),
+    re_path(r'^(?P<consumer_id>[0-9a-z\-]+)/usage-data$',
+        UsageDataAjaxView.as_view(),
+        name='consumers-usage-data'),
 ]
