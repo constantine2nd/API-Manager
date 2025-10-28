@@ -2,8 +2,8 @@ $(document).ready(function ($) {
   // Handle datetime-local inputs for rate limiting
   function initializeDateTimeFields() {
     // Set default values for datetime fields if they're empty
-    var fromDateField = $("#id_from_date");
-    var toDateField = $("#id_to_date");
+    var fromDateField = $("#from_date");
+    var toDateField = $("#to_date");
 
     // If fields are empty, set default values
     if (!fromDateField.val()) {
@@ -27,33 +27,35 @@ $(document).ready(function ($) {
     var toDate = $("[data-to-date]").data("to-date");
 
     if (fromDate && fromDate !== "1099-12-31T23:00:00Z") {
-      $("#id_from_date").val(convertISOToLocalDateTime(fromDate));
+      $("#from_date").val(convertISOToLocalDateTime(fromDate));
     }
     if (toDate && toDate !== "1099-12-31T23:00:00Z") {
-      $("#id_to_date").val(convertISOToLocalDateTime(toDate));
+      $("#to_date").val(convertISOToLocalDateTime(toDate));
     }
   }
 
   // Form validation
   function validateRateLimitingForm() {
-    $("form").on("submit", function (e) {
+    $("#rateLimitFormElement").on("submit", function (e) {
       var hasError = false;
       var errorMessage = "";
 
       // Check if any limit values are negative (except -1 which means unlimited)
-      $('input[type="number"]').each(function () {
-        var value = parseInt($(this).val());
-        if (value < -1) {
-          hasError = true;
-          errorMessage +=
-            "Rate limit values must be -1 (unlimited) or positive numbers.\n";
-          return false;
-        }
-      });
+      $(this)
+        .find('input[type="number"]')
+        .each(function () {
+          var value = parseInt($(this).val());
+          if (isNaN(value) || value < -1) {
+            hasError = true;
+            errorMessage +=
+              "Rate limit values must be -1 (unlimited) or positive numbers.\n";
+            return false;
+          }
+        });
 
       // Check date range
-      var fromDate = new Date($("#id_from_date").val());
-      var toDate = new Date($("#id_to_date").val());
+      var fromDate = new Date($("#from_date").val());
+      var toDate = new Date($("#to_date").val());
 
       if (fromDate && toDate && fromDate > toDate) {
         hasError = true;
@@ -65,6 +67,52 @@ $(document).ready(function ($) {
         e.preventDefault();
         return false;
       }
+
+      // Handle form submission via AJAX
+      e.preventDefault();
+      submitRateLimitForm();
+    });
+  }
+
+  // Submit rate limit form via AJAX
+  function submitRateLimitForm() {
+    var form = $("#rateLimitFormElement");
+    var formData = new FormData(form[0]);
+    var submitBtn = $("#submitBtn");
+    var originalText = submitBtn.text();
+
+    // Disable submit button and show loading
+    submitBtn.prop("disabled", true).text("Saving...");
+
+    $.ajax({
+      url: window.location.pathname,
+      type: "POST",
+      data: formData,
+      processData: false,
+      contentType: false,
+      headers: {
+        "X-CSRFToken": $("[name=csrfmiddlewaretoken]").val(),
+      },
+      success: function (response) {
+        if (response.success) {
+          // Hide form and reload page to show updated data
+          hideRateLimitForm();
+          window.location.reload();
+        } else {
+          alert("Error: " + (response.error || "Unknown error occurred"));
+        }
+      },
+      error: function (xhr, status, error) {
+        var errorMessage = "Error saving rate limit";
+        if (xhr.responseJSON && xhr.responseJSON.error) {
+          errorMessage = xhr.responseJSON.error;
+        }
+        alert(errorMessage);
+      },
+      complete: function () {
+        // Re-enable submit button
+        submitBtn.prop("disabled", false).text(originalText);
+      },
     });
   }
 
@@ -98,3 +146,11 @@ $(document).ready(function ($) {
     );
   });
 });
+
+// Global functions are now defined inline in the template
+// This file now only contains form validation and initialization
+
+// Refresh rate limits list
+function refreshRateLimits() {
+  window.location.reload();
+}
