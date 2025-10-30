@@ -127,7 +127,7 @@ class DetailView(LoginRequiredMixin, FormView):
         api = API(self.request.session.get("obp"))
         try:
             call_limits_urlpath = (
-                "/management/consumers/{}/consumer/call-limits".format(
+                "/management/consumers/{}/consumer/rate-limits".format(
                     self.kwargs["consumer_id"]
                 )
             )
@@ -239,7 +239,7 @@ class DetailView(LoginRequiredMixin, FormView):
             }
 
             # Use v6.0.0 API for creating rate limits
-            urlpath = "/management/consumers/{}/consumer/call-limits".format(
+            urlpath = "/management/consumers/{}/consumer/rate-limits".format(
                 consumer_id
             )
             response = self.api.post(
@@ -262,9 +262,16 @@ class DetailView(LoginRequiredMixin, FormView):
             return HttpResponseRedirect(request.path)
 
     def update_rate_limit(self, request):
-        """Update existing rate limit using v5.1.0 PUT API"""
+        """Update existing rate limit using v6.0.0 PUT API"""
         try:
             consumer_id = self.kwargs["consumer_id"]
+            rate_limiting_id = request.POST.get("rate_limit_id")
+
+            if not rate_limiting_id:
+                messages.error(request, "Rate limiting ID is required for update.")
+                return JsonResponse(
+                    {"success": False, "error": "Missing rate limiting ID"}
+                )
 
             # Helper function to format datetime to UTC
             def format_datetime_utc(dt_str):
@@ -297,12 +304,12 @@ class DetailView(LoginRequiredMixin, FormView):
                 ),
             }
 
-            # Use v5.1.0 API for updating rate limits
-            urlpath = "/management/consumers/{}/consumer/call-limits".format(
-                consumer_id
+            # Use v6.0.0 API for updating rate limits with rate_limiting_id
+            urlpath = "/management/consumers/{}/consumer/rate-limits/{}".format(
+                consumer_id, rate_limiting_id
             )
             response = self.api.put(
-                urlpath, payload, version=settings.API_VERSION["v510"]
+                urlpath, payload, version=settings.API_VERSION["v600"]
             )
 
             if "code" in response and response["code"] >= 400:
@@ -333,7 +340,7 @@ class DetailView(LoginRequiredMixin, FormView):
                 )
 
             # Use v6.0.0 API for deleting rate limits
-            urlpath = "/management/consumers/{}/consumer/call-limits/{}".format(
+            urlpath = "/management/consumers/{}/consumer/rate-limits/{}".format(
                 consumer_id, rate_limiting_id
             )
             response = self.api.delete(urlpath, version=settings.API_VERSION["v600"])
@@ -358,7 +365,7 @@ class DetailView(LoginRequiredMixin, FormView):
         try:
             data = form.cleaned_data
 
-            urlpath = "/management/consumers/{}/consumer/call-limits".format(
+            urlpath = "/management/consumers/{}/consumer/rate-limits".format(
                 data["consumer_id"]
             )
 
@@ -428,7 +435,7 @@ class DetailView(LoginRequiredMixin, FormView):
         api = API(self.request.session.get("obp"))
         try:
             call_limits_urlpath = (
-                "/management/consumers/{}/consumer/call-limits".format(
+                "/management/consumers/{}/consumer/rate-limits".format(
                     self.kwargs["consumer_id"]
                 )
             )
@@ -462,7 +469,7 @@ class DetailView(LoginRequiredMixin, FormView):
 
             # Get call limits using the correct API endpoint
             call_limits_urlpath = (
-                "/management/consumers/{}/consumer/call-limits".format(
+                "/management/consumers/{}/consumer/rate-limits".format(
                     self.kwargs["consumer_id"]
                 )
             )
@@ -545,7 +552,7 @@ class UsageDataAjaxView(LoginRequiredMixin, TemplateView):
         api = API(self.request.session.get("obp"))
         try:
             call_limits_urlpath = (
-                "/management/consumers/{}/consumer/call-limits".format(
+                "/management/consumers/{}/consumer/rate-limits".format(
                     self.kwargs["consumer_id"]
                 )
             )
