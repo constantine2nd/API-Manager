@@ -182,62 +182,55 @@
         </div>
     </div>
 
-    {% if consumer.current_state %}
     <div class="row">
         <div class="col-xs-12">
             <h2>{% trans "Current Usage" %}
                 <button type="button" id="refreshUsageBtn" class="btn btn-sm btn-info pull-right" onclick="refreshUsageStats()">
-                    <span class="glyphicon glyphicon-refresh"></span> {% trans "Refresh (10s)" %}
+                    <span class="glyphicon glyphicon-refresh"></span> {% trans "Auto Refresh (5s)" %}
                 </button>
             </h2>
             <div class="panel panel-info" id="usageStatsPanel">
                 <div class="panel-body" id="usageStatsContent">
-                    {% if consumer.current_state.per_hour %}
                     <div class="row" id="usageStatsRow">
-                        {% if consumer.current_state.per_second %}
                         <div class="col-xs-6 col-sm-2" data-period="per_second">
                             <strong>{% trans "Per Second" %}</strong><br>
-                            <span class="text-info usage-calls">{{ consumer.current_state.per_second.calls_made }} calls made</span><br>
-                            <small class="text-muted usage-reset">Resets in {{ consumer.current_state.per_second.reset_in_seconds }} seconds</small>
+                            <span class="text-info usage-calls">{% if current_usage.per_second.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_second.calls_made }} calls made{% endif %}</span><br>
+                            <small class="text-muted usage-reset">{% if current_usage.per_second.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_second.reset_in_seconds }} seconds{% endif %}</small>
                         </div>
-                        {% endif %}
-                        {% if consumer.current_state.per_minute %}
                         <div class="col-xs-6 col-sm-2" data-period="per_minute">
                             <strong>{% trans "Per Minute" %}</strong><br>
-                            <span class="text-info usage-calls">{{ consumer.current_state.per_minute.calls_made }} calls made</span><br>
-                            <small class="text-muted usage-reset">Resets in {{ consumer.current_state.per_minute.reset_in_seconds }} seconds</small>
+                            <span class="text-info usage-calls">{% if current_usage.per_minute.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_minute.calls_made }} calls made{% endif %}</span><br>
+                            <small class="text-muted usage-reset">{% if current_usage.per_minute.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_minute.reset_in_seconds }} seconds{% endif %}</small>
                         </div>
-                        {% endif %}
                         <div class="col-xs-6 col-sm-2" data-period="per_hour">
                             <strong>{% trans "Per Hour" %}</strong><br>
-                            <span class="text-info usage-calls">{{ consumer.current_state.per_hour.calls_made }} calls made</span><br>
-                            <small class="text-muted usage-reset">Resets in {{ consumer.current_state.per_hour.reset_in_seconds }} seconds</small>
+                            <span class="text-info usage-calls">{% if current_usage.per_hour.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_hour.calls_made }} calls made{% endif %}</span><br>
+                            <small class="text-muted usage-reset">{% if current_usage.per_hour.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_hour.reset_in_seconds }} seconds{% endif %}</small>
                         </div>
                         <div class="col-xs-6 col-sm-2" data-period="per_day">
                             <strong>{% trans "Per Day" %}</strong><br>
-                            <span class="text-info usage-calls">{{ consumer.current_state.per_day.calls_made }} calls made</span><br>
-                            <small class="text-muted usage-reset">Resets in {{ consumer.current_state.per_day.reset_in_seconds }} seconds</small>
+                            <span class="text-info usage-calls">{% if current_usage.per_day.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_day.calls_made }} calls made{% endif %}</span><br>
+                            <small class="text-muted usage-reset">{% if current_usage.per_day.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_day.reset_in_seconds }} seconds{% endif %}</small>
                         </div>
                         <div class="col-xs-6 col-sm-2" data-period="per_week">
                             <strong>{% trans "Per Week" %}</strong><br>
-                            <span class="text-info usage-calls">{{ consumer.current_state.per_week.calls_made }} calls made</span><br>
-                            <small class="text-muted usage-reset">Resets in {{ consumer.current_state.per_week.reset_in_seconds }} seconds</small>
+                            <span class="text-info usage-calls">{% if current_usage.per_week.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_week.calls_made }} calls made{% endif %}</span><br>
+                            <small class="text-muted usage-reset">{% if current_usage.per_week.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_week.reset_in_seconds }} seconds{% endif %}</small>
                         </div>
                         <div class="col-xs-6 col-sm-2" data-period="per_month">
                             <strong>{% trans "Per Month" %}</strong><br>
-                            <span class="text-info usage-calls">{{ consumer.current_state.per_month.calls_made }} calls made</span><br>
-                            <small class="text-muted usage-reset">Resets in {{ consumer.current_state.per_month.reset_in_seconds }} seconds</small>
+                            <span class="text-info usage-calls">{% if current_usage.per_month.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_month.calls_made }} calls made{% endif %}</span><br>
+                            <small class="text-muted usage-reset">{% if current_usage.per_month.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_month.reset_in_seconds }} seconds{% endif %}</small>
                         </div>
                     </div>
-                    {% endif %}
                     <div id="refreshProgress" class="progress" style="display: none; margin-top: 15px;">
                         <div class="progress-bar progress-bar-info progress-bar-striped active" id="progressBar" style="width: 0%"></div>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
 	<div class="row">
 		<div class="col-xs-12">
 			<div id="consumers-detail-consumer_id">
@@ -352,6 +345,14 @@
 			{% if consumer.to_date %}
 			$('body').attr('data-to-date', '{{ consumer.to_date }}');
 			{% endif %}
+
+			// Debug: Log basic debugging info
+			console.log('Current usage data available:', {% if current_usage %}true{% else %}false{% endif %});
+			
+			// Initial load of usage data
+			setTimeout(function() {
+				fetchUsageData();
+			}, 1000);
 		});
 
 		// Global functions for CRUD operations - attached to window for global access
@@ -469,17 +470,17 @@
 		// Global variables for refresh functionality
 		let refreshInterval = null;
 		let refreshCount = 0;
-		const MAX_REFRESH_COUNT = 10;
+		const MAX_REFRESH_COUNT = 5;
 
 		// Function to refresh usage statistics
-		function refreshUsageStats() {
+		window.refreshUsageStats = function() {
 			const button = document.getElementById('refreshUsageBtn');
 			const progressDiv = document.getElementById('refreshProgress');
 			const progressBar = document.getElementById('progressBar');
 
 			// Disable button and show progress
 			button.disabled = true;
-			button.innerHTML = '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span> Refreshing...';
+			button.innerHTML = '<span class="glyphicon glyphicon-refresh glyphicon-spin"></span> Auto Refreshing...';
 			progressDiv.style.display = 'block';
 
 			// Reset counters
@@ -488,12 +489,14 @@
 			// Start refresh cycle
 			refreshInterval = setInterval(fetchUsageData, 1000);
 			fetchUsageData(); // Initial fetch
-		}
+		};
 
 		// Function to fetch usage data via AJAX
 		function fetchUsageData() {
 			const consumerId = '{{ consumer.consumer_id }}';
 			const panel = document.getElementById('usageStatsPanel');
+
+			console.log('Fetching usage data for consumer:', consumerId);
 
 			// Add refreshing effect to panel
 			panel.classList.add('panel-refreshing');
@@ -507,6 +510,7 @@
 				},
 				timeout: 5000, // 5 second timeout
 				success: function(data) {
+					console.log('Usage data received:', data);
 					updateUsageDisplay(data);
 					refreshCount++;
 
@@ -516,7 +520,7 @@
 					progressBar.style.width = progress + '%';
 					progressBar.textContent = refreshCount + '/' + MAX_REFRESH_COUNT;
 
-					// Stop after 10 seconds
+					// Stop after 5 seconds
 					if (refreshCount >= MAX_REFRESH_COUNT) {
 						clearInterval(refreshInterval);
 						resetRefreshButton();
@@ -524,7 +528,7 @@
 					}
 				},
 				error: function(xhr, status, error) {
-					console.error('Error fetching usage data:', error);
+					console.error('Error fetching usage data:', error, xhr.responseText);
 					showRefreshError(error);
 
 					refreshCount++;
@@ -562,12 +566,12 @@
 
 		// Function to update usage display with new data
 		function updateUsageDisplay(data) {
-			if (data && data.current_state) {
-				const currentState = data.current_state;
+			console.log('Updating display with data:', data);
+			if (data) {
 				const periods = ['per_second', 'per_minute', 'per_hour', 'per_day', 'per_week', 'per_month'];
 
 				periods.forEach(function(period) {
-					const periodData = currentState[period];
+					const periodData = data[period];
 					if (periodData) {
 						const periodDiv = document.querySelector('[data-period="' + period + '"]');
 						if (periodDiv) {
@@ -575,13 +579,14 @@
 							const resetSpan = periodDiv.querySelector('.usage-reset');
 
 							if (callsSpan) {
-								const oldCalls = callsSpan.textContent.match(/\d+/);
+								const oldCalls = callsSpan.textContent.match(/-?\d+/);
 								const newCalls = periodData.calls_made;
+								const displayCalls = newCalls === -1 ? 'Not tracked' : newCalls + ' calls made';
 
 								// Check if calls increased
-								const callsIncreased = oldCalls && parseInt(oldCalls[0]) < newCalls;
+								const callsIncreased = oldCalls && parseInt(oldCalls[0]) < newCalls && newCalls !== -1;
 
-								callsSpan.textContent = newCalls + ' calls made';
+								callsSpan.textContent = displayCalls;
 
 								// Add visual feedback
 								callsSpan.classList.add('updating');
@@ -604,7 +609,8 @@
 							}
 
 							if (resetSpan) {
-								resetSpan.textContent = 'Resets in ' + periodData.reset_in_seconds + ' seconds';
+								const resetText = periodData.reset_in_seconds === -1 ? 'Not tracked' : 'Resets in ' + periodData.reset_in_seconds + ' seconds';
+								resetSpan.textContent = resetText;
 								// Add subtle animation to reset timer
 								resetSpan.style.opacity = '0.7';
 								setTimeout(function() {
@@ -621,7 +627,7 @@
 		}
 
 		// Function to update last refresh time
-		function updateLastRefreshTime() {
+		window.updateLastRefreshTime = function() {
 			let timeDiv = document.getElementById('lastRefreshTime');
 			if (!timeDiv) {
 				timeDiv = document.createElement('small');
@@ -638,13 +644,12 @@
 		}
 
 		// Function to reset refresh button
-		function resetRefreshButton() {
+		window.resetRefreshButton = function() {
 			const button = document.getElementById('refreshUsageBtn');
 			const progressDiv = document.getElementById('refreshProgress');
-			const panel = document.getElementById('usageStatsPanel');
 
 			button.disabled = false;
-			button.innerHTML = '<span class="glyphicon glyphicon-refresh"></span> {% trans "Refresh (10s)" %}';
+			button.innerHTML = '<span class="glyphicon glyphicon-refresh"></span> Auto Refresh (5s)';
 			progressDiv.style.display = 'none';
 			document.getElementById('progressBar').style.width = '0%';
 			document.getElementById('progressBar').textContent = '';
@@ -654,7 +659,7 @@
 			if (errorDiv && errorDiv.parentNode) {
 				errorDiv.parentNode.removeChild(errorDiv);
 			}
-		}
+		};
 	</script>
 {% endblock extrajs %}
 

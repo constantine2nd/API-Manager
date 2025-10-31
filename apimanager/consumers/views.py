@@ -455,6 +455,15 @@ class DetailView(LoginRequiredMixin, FormView):
         api = API(self.request.session.get("obp"))
         consumer = {}
         call_limits = {}
+        # Initialize current_usage with default values
+        current_usage = {
+            "per_second": {"calls_made": -1, "reset_in_seconds": -1},
+            "per_minute": {"calls_made": -1, "reset_in_seconds": -1},
+            "per_hour": {"calls_made": -1, "reset_in_seconds": -1},
+            "per_day": {"calls_made": -1, "reset_in_seconds": -1},
+            "per_week": {"calls_made": -1, "reset_in_seconds": -1},
+            "per_month": {"calls_made": -1, "reset_in_seconds": -1},
+        }
 
         try:
             urlpath = "/management/consumers/{}".format(self.kwargs["consumer_id"])
@@ -476,6 +485,19 @@ class DetailView(LoginRequiredMixin, FormView):
             call_limits = api.get(
                 call_limits_urlpath, version=settings.API_VERSION["v510"]
             )
+
+            # Get current usage data using v6.0.0 API
+            current_usage_urlpath = (
+                "/management/consumers/{}/consumer/current-usage".format(
+                    self.kwargs["consumer_id"]
+                )
+            )
+            current_usage = api.get(
+                current_usage_urlpath, version=settings.API_VERSION["v600"]
+            )
+            if "code" in current_usage and current_usage["code"] >= 400:
+                # If current usage fails, keep the default values already set
+                pass
 
             if "code" in call_limits and call_limits["code"] >= 400:
                 messages.error(self.request, "{}".format(call_limits["message"]))
@@ -541,29 +563,39 @@ class DetailView(LoginRequiredMixin, FormView):
         except Exception as err:
             messages.error(self.request, "{}".format(err))
         finally:
-            context.update({"consumer": consumer, "call_limits": call_limits})
+            # Ensure current_usage always has the expected structure
+            if not current_usage or "per_second" not in current_usage:
+                current_usage = {
+                    "per_second": {"calls_made": -1, "reset_in_seconds": -1},
+                    "per_minute": {"calls_made": -1, "reset_in_seconds": -1},
+                    "per_hour": {"calls_made": -1, "reset_in_seconds": -1},
+                    "per_day": {"calls_made": -1, "reset_in_seconds": -1},
+                    "per_week": {"calls_made": -1, "reset_in_seconds": -1},
+                    "per_month": {"calls_made": -1, "reset_in_seconds": -1},
+                }
+            context.update({"consumer": consumer, "call_limits": call_limits, "current_usage": current_usage})
         return context
 
 
 class UsageDataAjaxView(LoginRequiredMixin, TemplateView):
-    """AJAX view to return usage data for real-time updates"""
+    """AJAX view to return current usage data for real-time updates"""
 
     def get(self, request, *args, **kwargs):
         api = API(self.request.session.get("obp"))
         try:
-            call_limits_urlpath = (
-                "/management/consumers/{}/consumer/rate-limits".format(
+            current_usage_urlpath = (
+                "/management/consumers/{}/consumer/current-usage".format(
                     self.kwargs["consumer_id"]
                 )
             )
-            call_limits = api.get(
-                call_limits_urlpath, version=settings.API_VERSION["v510"]
+            current_usage = api.get(
+                current_usage_urlpath, version=settings.API_VERSION["v600"]
             )
 
-            if "code" in call_limits and call_limits["code"] >= 400:
-                return JsonResponse({"error": call_limits["message"]}, status=400)
+            if "code" in current_usage and current_usage["code"] >= 400:
+                return JsonResponse({"error": current_usage["message"]}, status=400)
 
-            return JsonResponse(call_limits)
+            return JsonResponse(current_usage)
         except APIError as err:
             return JsonResponse({"error": str(err)}, status=500)
         except Exception as err:
