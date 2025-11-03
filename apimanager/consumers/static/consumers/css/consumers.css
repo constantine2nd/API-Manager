@@ -220,7 +220,7 @@
     color: #495057;
     font-weight: bold;
     font-size: 12px;
-    text-transform: uppercase;
+    text-transform: none;
     border-top: none;
 }
 
