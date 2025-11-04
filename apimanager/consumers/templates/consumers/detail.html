@@ -194,33 +194,33 @@
                     <div class="row" id="usageStatsRow">
                         <div class="col-xs-6 col-sm-2" data-period="per_second">
                             <strong>{% trans "Per Second" %}</strong><br>
-                            <span class="text-info usage-calls">{% if current_usage.per_second.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_second.calls_made }} calls made{% endif %}</span><br>
-                            <small class="text-muted usage-reset">{% if current_usage.per_second.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_second.reset_in_seconds }} seconds{% endif %}</small>
+                            <span class="text-info usage-calls">{% if not current_usage.per_second %}Unlimited{% elif current_usage.per_second.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_second.calls_made }} calls made{% endif %}</span><br>
+                            {% if current_usage.per_second %}<small class="text-muted usage-reset">{% if current_usage.per_second.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_second.reset_in_seconds }} seconds{% endif %}</small>{% endif %}
                         </div>
                         <div class="col-xs-6 col-sm-2" data-period="per_minute">
                             <strong>{% trans "Per Minute" %}</strong><br>
-                            <span class="text-info usage-calls">{% if current_usage.per_minute.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_minute.calls_made }} calls made{% endif %}</span><br>
-                            <small class="text-muted usage-reset">{% if current_usage.per_minute.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_minute.reset_in_seconds }} seconds{% endif %}</small>
+                            <span class="text-info usage-calls">{% if not current_usage.per_minute %}Unlimited{% elif current_usage.per_minute.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_minute.calls_made }} calls made{% endif %}</span><br>
+                            {% if current_usage.per_minute %}<small class="text-muted usage-reset">{% if current_usage.per_minute.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_minute.reset_in_seconds }} seconds{% endif %}</small>{% endif %}
                         </div>
                         <div class="col-xs-6 col-sm-2" data-period="per_hour">
                             <strong>{% trans "Per Hour" %}</strong><br>
-                            <span class="text-info usage-calls">{% if current_usage.per_hour.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_hour.calls_made }} calls made{% endif %}</span><br>
-                            <small class="text-muted usage-reset">{% if current_usage.per_hour.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_hour.reset_in_seconds }} seconds{% endif %}</small>
+                            <span class="text-info usage-calls">{% if not current_usage.per_hour %}Unlimited{% elif current_usage.per_hour.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_hour.calls_made }} calls made{% endif %}</span><br>
+                            {% if current_usage.per_hour %}<small class="text-muted usage-reset">{% if current_usage.per_hour.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_hour.reset_in_seconds }} seconds{% endif %}</small>{% endif %}
                         </div>
                         <div class="col-xs-6 col-sm-2" data-period="per_day">
                             <strong>{% trans "Per Day" %}</strong><br>
-                            <span class="text-info usage-calls">{% if current_usage.per_day.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_day.calls_made }} calls made{% endif %}</span><br>
-                            <small class="text-muted usage-reset">{% if current_usage.per_day.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_day.reset_in_seconds }} seconds{% endif %}</small>
+                            <span class="text-info usage-calls">{% if not current_usage.per_day %}Unlimited{% elif current_usage.per_day.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_day.calls_made }} calls made{% endif %}</span><br>
+                            {% if current_usage.per_day %}<small class="text-muted usage-reset">{% if current_usage.per_day.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_day.reset_in_seconds }} seconds{% endif %}</small>{% endif %}
                         </div>
                         <div class="col-xs-6 col-sm-2" data-period="per_week">
                             <strong>{% trans "Per Week" %}</strong><br>
-                            <span class="text-info usage-calls">{% if current_usage.per_week.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_week.calls_made }} calls made{% endif %}</span><br>
-                            <small class="text-muted usage-reset">{% if current_usage.per_week.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_week.reset_in_seconds }} seconds{% endif %}</small>
+                            <span class="text-info usage-calls">{% if not current_usage.per_week %}Unlimited{% elif current_usage.per_week.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_week.calls_made }} calls made{% endif %}</span><br>
+                            {% if current_usage.per_week %}<small class="text-muted usage-reset">{% if current_usage.per_week.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_week.reset_in_seconds }} seconds{% endif %}</small>{% endif %}
                         </div>
                         <div class="col-xs-6 col-sm-2" data-period="per_month">
                             <strong>{% trans "Per Month" %}</strong><br>
-                            <span class="text-info usage-calls">{% if current_usage.per_month.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_month.calls_made }} calls made{% endif %}</span><br>
-                            <small class="text-muted usage-reset">{% if current_usage.per_month.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_month.reset_in_seconds }} seconds{% endif %}</small>
+                            <span class="text-info usage-calls">{% if not current_usage.per_month %}Unlimited{% elif current_usage.per_month.calls_made|add:"0" == -1 %}Not tracked{% else %}{{ current_usage.per_month.calls_made }} calls made{% endif %}</span><br>
+                            {% if current_usage.per_month %}<small class="text-muted usage-reset">{% if current_usage.per_month.reset_in_seconds|add:"0" == -1 %}Not tracked{% else %}Resets in {{ current_usage.per_month.reset_in_seconds }} seconds{% endif %}</small>{% endif %}
                         </div>
                     </div>
                     <div id="refreshProgress" class="progress" style="display: none; margin-top: 15px;">
@@ -572,23 +572,23 @@
 
 				periods.forEach(function(period) {
 					const periodData = data[period];
-					if (periodData) {
-						const periodDiv = document.querySelector('[data-period="' + period + '"]');
-						if (periodDiv) {
-							const callsSpan = periodDiv.querySelector('.usage-calls');
-							const resetSpan = periodDiv.querySelector('.usage-reset');
+					const periodDiv = document.querySelector('[data-period="' + period + '"]');
+					if (periodDiv) {
+						const callsSpan = periodDiv.querySelector('.usage-calls');
+						const resetSpan = periodDiv.querySelector('.usage-reset');
 
-							if (callsSpan) {
-								const oldCalls = callsSpan.textContent.match(/-?\d+/);
-								const newCalls = periodData.calls_made;
-								const displayCalls = newCalls === -1 ? 'Not tracked' : newCalls + ' calls made';
+						if (callsSpan) {
+							const oldCalls = callsSpan.textContent.match(/-?\d+/);
+							const newCalls = periodData ? periodData.calls_made : null;
+							const displayCalls = !periodData ? 'Unlimited' : (newCalls === -1 ? 'Not tracked' : newCalls + ' calls made');
 
-								// Check if calls increased
-								const callsIncreased = oldCalls && parseInt(oldCalls[0]) < newCalls && newCalls !== -1;
+							// Check if calls increased (only if periodData exists)
+							const callsIncreased = periodData && oldCalls && parseInt(oldCalls[0]) < newCalls && newCalls !== -1;
 
-								callsSpan.textContent = displayCalls;
+							callsSpan.textContent = displayCalls;
 
-								// Add visual feedback
+							// Add visual feedback only if data is tracked
+							if (periodData) {
 								callsSpan.classList.add('updating');
 								if (callsIncreased) {
 									periodDiv.classList.add('data-updated');
@@ -607,15 +607,20 @@
 									callsSpan.style.backgroundColor = '';
 								}, 1000);
 							}
+						}
 
-							if (resetSpan) {
+						if (resetSpan) {
+							if (periodData) {
 								const resetText = periodData.reset_in_seconds === -1 ? 'Not tracked' : 'Resets in ' + periodData.reset_in_seconds + ' seconds';
 								resetSpan.textContent = resetText;
+								resetSpan.style.display = 'block';
 								// Add subtle animation to reset timer
 								resetSpan.style.opacity = '0.7';
 								setTimeout(function() {
 									resetSpan.style.opacity = '1';
 								}, 300);
+							} else {
+								resetSpan.style.display = 'none';
 							}
 						}
 					}
