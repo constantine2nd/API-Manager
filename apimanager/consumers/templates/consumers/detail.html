@@ -349,11 +349,81 @@
 			// Debug: Log basic debugging info
 			console.log('Current usage data available:', {% if current_usage %}true{% else %}false{% endif %});
 			
-			// Initial load of usage data
+			// Load rate limits data into JavaScript
+			window.rateLimits = [
+				{% if call_limits and call_limits.limits %}
+					{% for limit in call_limits.limits %}
+					{
+						per_second_call_limit: {{ limit.per_second_call_limit|default:"-1" }},
+						per_minute_call_limit: {{ limit.per_minute_call_limit|default:"-1" }},
+						per_hour_call_limit: {{ limit.per_hour_call_limit|default:"-1" }},
+						per_day_call_limit: {{ limit.per_day_call_limit|default:"-1" }},
+						per_week_call_limit: {{ limit.per_week_call_limit|default:"-1" }},
+						per_month_call_limit: {{ limit.per_month_call_limit|default:"-1" }}
+					}{% if not forloop.last %},{% endif %}
+					{% endfor %}
+				{% endif %}
+			];
+			
+			// Initial load and display of usage data
 			setTimeout(function() {
+				console.log('Rate limits loaded:', window.rateLimits);
+				updateUsageDisplayWithLimits();
 				fetchUsageData();
-			}, 1000);
+			}, 100);
 		});
+
+		// Function to calculate effective limit for a period by summing all active limits
+		function getEffectiveLimit(period) {
+			if (!window.rateLimits || window.rateLimits.length === 0) {
+				return null;
+			}
+			
+			let total = 0;
+			let hasLimits = false;
+			
+			window.rateLimits.forEach(function(limit) {
+				let limitValue;
+				switch(period) {
+					case 'per_second': limitValue = limit.per_second_call_limit; break;
+					case 'per_minute': limitValue = limit.per_minute_call_limit; break;
+					case 'per_hour': limitValue = limit.per_hour_call_limit; break;
+					case 'per_day': limitValue = limit.per_day_call_limit; break;
+					case 'per_week': limitValue = limit.per_week_call_limit; break;
+					case 'per_month': limitValue = limit.per_month_call_limit; break;
+					default: limitValue = -1;
+				}
+				
+				// Convert to integer and check if it's a valid positive limit
+				let parsedValue = parseInt(limitValue);
+				if (!isNaN(parsedValue) && parsedValue > 0) {
+					total += parsedValue;
+					hasLimits = true;
+				}
+			});
+			
+			console.log('Effective limit for', period, ':', hasLimits ? total : 'unlimited');
+			return hasLimits ? total : null;
+		}
+
+		// Function to update usage display with rate limits
+		function updateUsageDisplayWithLimits() {
+			$('#usageStatsRow .usage-calls').each(function() {
+				let $this = $(this);
+				let period = $this.closest('[data-period]').data('period');
+				let text = $this.text().trim();
+				
+				// Only update if it shows "X calls made" format (not "Unlimited" or "Not tracked")
+				let match = text.match(/^(\d+) calls made$/);
+				if (match) {
+					let calls = match[1];
+					let effectiveLimit = getEffectiveLimit(period);
+					if (effectiveLimit && effectiveLimit > 0) {
+						$this.text(calls + ' of ' + effectiveLimit + ' calls made');
+					}
+				}
+			});
+		}
 
 		// Global functions for CRUD operations - attached to window for global access
 		window.showAddRateLimitForm = function() {
@@ -580,7 +650,9 @@
 						if (callsSpan) {
 							const oldCalls = callsSpan.textContent.match(/-?\d+/);
 							const newCalls = periodData ? periodData.calls_made : null;
-							const displayCalls = !periodData ? 'Unlimited' : (newCalls === -1 ? 'Not tracked' : newCalls + ' calls made');
+							const effectiveLimit = getEffectiveLimit(period);
+							const limitText = effectiveLimit ? ' of ' + effectiveLimit : '';
+							const displayCalls = !periodData ? 'Unlimited' : (newCalls === -1 ? 'Not tracked' : newCalls + limitText + ' calls made');
 
 							// Check if calls increased (only if periodData exists)
 							const callsIncreased = periodData && oldCalls && parseInt(oldCalls[0]) < newCalls && newCalls !== -1;
