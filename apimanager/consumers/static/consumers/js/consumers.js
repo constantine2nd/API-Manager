@@ -10,7 +10,7 @@ $(document).ready(function ($) {
       fromDateField.val("2024-01-01T00:00");
     }
     if (!toDateField.val()) {
-      toDateField.val("2026-01-01T00:00");
+      toDateField.val("2100-01-01T00:00");
     }
   }
 
