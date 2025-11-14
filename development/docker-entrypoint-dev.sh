@@ -5,10 +5,6 @@
 
 set -e
 
-# Copy development local settings if it doesn't exist or force override
-echo "Setting up development local_settings.py..."
-cp /usr/local/bin/local_settings_dev.py /app/apimanager/apimanager/local_settings.py
-
 # Wait for database to be ready
 echo "Waiting for database to be ready..."
 while ! pg_isready -h 127.0.0.1 -p 5434 -U apimanager -q; do

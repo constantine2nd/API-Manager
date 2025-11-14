@@ -1,5 +1,9 @@
 FROM python:3.10
 
+# Create non-root user
+RUN groupadd --gid 1000 appuser \
+    && useradd --uid 1000 --gid appuser --shell /bin/bash --create-home appuser
+
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
@@ -29,14 +33,20 @@ COPY demo/ /app/demo/
 COPY gunicorn.conf.py /app/
 
 # Create necessary directories
-RUN mkdir -p /app/logs /app/static /app/db
+RUN mkdir -p /app/logs /app/static /app/db /static-collected
 
-# Copy development local settings and entrypoint script to /usr/local/bin
-COPY development/local_settings_dev.py /usr/local/bin/local_settings_dev.py
+# Copy development local settings directly to the correct location
+COPY development/local_settings_dev.py /app/apimanager/apimanager/local_settings.py
+# Copy entrypoint script to /usr/local/bin
 COPY development/docker-entrypoint-dev.sh /usr/local/bin/docker-entrypoint-dev.sh
 
-# Set proper permissions
-RUN chmod +x /app/apimanager/manage.py /usr/local/bin/docker-entrypoint-dev.sh
+# Set proper permissions and ownership
+RUN chmod +x /app/apimanager/manage.py /usr/local/bin/docker-entrypoint-dev.sh \
+    && chown -R appuser:appuser /app \
+    && chown -R appuser:appuser /static-collected
+
+# Switch to non-root user
+USER appuser
 
 # Expose port
 EXPOSE 8000
