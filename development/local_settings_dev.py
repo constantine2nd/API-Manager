@@ -14,7 +14,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 if os.getenv('API_HOST'):
     API_HOST = os.getenv('API_HOST')
 else:
-    API_HOST = 'http://172.21.0.1:8080'
+    API_HOST = 'http://127.0.0.1:8080'
 
 if os.getenv('API_PORTAL'):
     API_PORTAL = os.getenv('API_PORTAL')
