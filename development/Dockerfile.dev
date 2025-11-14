@@ -21,8 +21,12 @@ RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
     && pip install dj-database-url
 
-# Copy project
-COPY . /app/
+# Copy project files explicitly
+COPY requirements.txt /app/
+COPY apimanager/ /app/apimanager/
+COPY static/ /app/static/
+COPY demo/ /app/demo/
+COPY gunicorn.conf.py /app/
 
 # Create necessary directories
 RUN mkdir -p /app/logs /app/static /app/db

@@ -1,7 +1,9 @@
 FROM python:3.10
-COPY . /app
+COPY requirements.txt /app/
+COPY apimanager/ /app/apimanager/
+COPY static/ /app/static/
+COPY gunicorn.conf.py /app/gunicorn.conf.py
 COPY .github/local_settings_container.py /app/apimanager/apimanager/local_settings.py
-COPY .github/gunicorn.conf.py /app/gunicorn.conf.py
 RUN pip install -r /app/requirements.txt
 WORKDIR /app
 RUN ./apimanager/manage.py migrate
