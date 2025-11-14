@@ -49,6 +49,17 @@ if [ ! -f .env ]; then
     echo "❌ .env file not found. Please run this script from the development directory."
     exit 1
 fi
+
+# Check database password security
+if [ "$POSTGRES_PASSWORD" = "CHANGE_THIS_PASSWORD" ] || [ -z "$POSTGRES_PASSWORD" ]; then
+    echo "🔒 SECURITY WARNING: Database password not properly set!"
+    echo "   Please update POSTGRES_PASSWORD in .env file with a secure password"
+    echo "   The default password 'CHANGE_THIS_PASSWORD' should not be used"
+    echo ""
+else
+    echo "✅ Database password configured"
+fi
+
 if [ "$OAUTH_CONSUMER_KEY" = "your-oauth-consumer-key" ] || [ "$OAUTH_CONSUMER_SECRET" = "your-oauth-consumer-secret" ] || [ -z "$OAUTH_CONSUMER_KEY" ] || [ -z "$OAUTH_CONSUMER_SECRET" ]; then
     echo "⚠️  WARNING: OAuth credentials not properly set!"
     echo "   Please update OAUTH_CONSUMER_KEY and OAUTH_CONSUMER_SECRET in .env file"
@@ -91,7 +102,7 @@ if docker-compose ps | grep -q "Up"; then
     echo "   - View logs: docker-compose logs api-manager-web"
     echo "   - Access shell: docker-compose exec api-manager-web bash"
     echo "   - Django shell: docker-compose exec api-manager-web bash -c 'cd apimanager && python manage.py shell'"
-    echo "   - Database shell: docker-compose exec api-manager-db psql -U apimanager -d apimanager"
+    echo "   - Database shell: docker-compose exec api-manager-db psql -U \${POSTGRES_USER:-apimanager} -d \${POSTGRES_DB:-apimanager}"
     echo ""
 
     # Test if the application is responding

@@ -11,7 +11,7 @@ services:
       - ..:/app
       - ../logs:/app/logs
     environment:
-      - DATABASE_URL=postgresql://apimanager:apimanager@127.0.0.1:5434/apimanager
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-apimanager}:${POSTGRES_PASSWORD:-CHANGE_THIS_PASSWORD}@127.0.0.1:5434/${POSTGRES_DB:-apimanager}
       - API_HOST=http://127.0.0.1:8080
       - CALLBACK_BASE_URL=http://127.0.0.1:8000
       - ALLOW_DIRECT_LOGIN=True
@@ -27,7 +27,7 @@ services:
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-apimanager}
       - POSTGRES_USER=${POSTGRES_USER:-apimanager}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-apimanager}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-CHANGE_THIS_PASSWORD}
     volumes:
       - api_manager_postgres_data:/var/lib/postgresql/data
     ports:

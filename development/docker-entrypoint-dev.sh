@@ -7,7 +7,8 @@ set -e
 
 # Wait for database to be ready
 echo "Waiting for database to be ready..."
-while ! pg_isready -h 127.0.0.1 -p 5434 -U apimanager -q; do
+DB_USER=${POSTGRES_USER:-apimanager}
+while ! pg_isready -h 127.0.0.1 -p 5434 -U "$DB_USER" -q; do
   echo "Database is unavailable - sleeping"
   sleep 2
 done
